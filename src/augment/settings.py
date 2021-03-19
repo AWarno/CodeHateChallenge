@@ -1,0 +1,1 @@
+PATH_MODEL_ENG_TO_PL = "english-polish-conv"
