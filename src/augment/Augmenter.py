@@ -1,7 +1,6 @@
 from fairseq.models import BaseFairseqModel
 
-from augment.eda_nlp.code.eda import eda
-from src.augment.settings import PATH_MODEL_ENG_TO_PL
+from src.augment.eda_nlp.code.eda import eda
 
 
 class Augmenter:

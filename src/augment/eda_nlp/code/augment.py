@@ -6,7 +6,6 @@ from src.augment.eda_nlp.code.eda import *
 #arguments to be parsed from command line
 import argparse
 
-from eda_nlp.code.eda import eda
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--input", required=True, type=str, help="input file of unaugmented data")
