@@ -1,7 +1,12 @@
 from fairseq.models import BaseFairseqModel
+import pickle
+import spacy
+import pl_core_news_sm
 
 from src.augment.eda_nlp.code.eda import eda
 from src.augment.offensive_dict import OffensiveDict
+
+WORDS_PATH = '../../polish_dict.p'
 
 
 class Augmenter:
@@ -21,6 +26,13 @@ class Augmenter:
 
         # how much to delete words
         self.alpha_rd = alpha_rd
+
+        # polish words pickle
+        with open(WORDS_PATH, 'rb') as handle:
+            self.polish_words = pickle.load(handle)
+
+        # spacy nlp lemmatizer for polish
+        self.nlp = pl_core_news_sm.load()
 
         self.translator_eng_pl = BaseFairseqModel.from_pretrained(
             model_name_or_path="english-polish-conv",
@@ -99,6 +111,23 @@ class Augmenter:
 
         return " ".join(new_sent)
 
+    def is_word(self, word):
+        if word in self.polish_words:
+            return True
+        else:
+            return False
+
+    def is_polish_sentence(seq, tresh=0.7):
+        seq_len = len(seq.split(' '))
+        lemmas = self.nlp(seq)
+        correct_words = [y for y in lemmas if self.is_word(y.lemma_)]
+        if len(correct_words / seq_len) < tresh:
+            return False
+        return True
+        
+        
+        
+
     def augment_text(self, sentence, first_lang, second_lang='english'):
         if first_lang == "polish":
             new_sent = self._divide_by_offensive_words(sentence)
@@ -123,4 +152,5 @@ class Augmenter:
 if __name__ == "__main__":
     augmenter = Augmenter("../../polish_offensive_dict.json")
     res = augmenter.augment_text("kebab Tomasz Lis jest Żydem i murzynem", "polish", second_lang="polish")
-    print(res)
+    print(augmenter.is_polish_sentence("cza cza cza cza"))
+    # print(res)
