@@ -6,7 +6,7 @@ import pl_core_news_sm
 from src.augment.eda_nlp.code.eda import eda
 from src.augment.offensive_dict import OffensiveDict
 
-WORDS_PATH = '../../polish_dict.p'
+WORDS_PATH = 'polish_dict.p'
 
 
 class Augmenter:
@@ -44,7 +44,7 @@ class Augmenter:
             cpu=False
         )
 
-        self.translator_eng_pl.to(torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
+        # self.translator_eng_pl.to(torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
 
         self.translator_pl_eng = BaseFairseqModel.from_pretrained(
             model_name_or_path="polish-english-conv",
@@ -56,7 +56,7 @@ class Augmenter:
             cpu=False
         )
 
-        self.translator_pl_eng.to(torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
+        # self.translator_pl_eng.to(torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
 
         self.offensive_dict = OffensiveDict(path)
 
@@ -123,7 +123,7 @@ class Augmenter:
         else:
             return False
 
-    def is_polish_sentence(seq, tresh=0.7):
+    def is_polish_sentence(self, seq, tresh=0.7):
         seq_len = len(seq.split(' '))
         lemmas = self.nlp(seq)
         correct_words = [y for y in lemmas if self.is_word(y.lemma_)]
@@ -157,6 +157,6 @@ class Augmenter:
 
 if __name__ == "__main__":
     augmenter = Augmenter("polish_offensive_dict.json")
-    res = augmenter.augment_text("kebab Tomasz Lis jest Żydem i murzynem", "polish", second_lang="polish")
-    print(augmenter.is_polish_sentence("cza cza cza cza"))
-    # print(res)
+    res = augmenter.augment_text("murzyni do gazu", "polish", second_lang="polish")
+    # print(augmenter.is_polish_sentence("cza cza cza cza"))
+    print(res)
