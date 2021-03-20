@@ -1,0 +1,2 @@
+
+OFFENSIVE_DICT = {"murzynem" }
