@@ -1,4 +1,6 @@
 import json
+import pickle
+
 
 # path to wiktionary with scraped language dict
 JSON_PATH = 'wiki.json'
@@ -6,11 +8,13 @@ JSON_PATH = 'wiki.json'
 # offensive_words_tags = ['contemptuous', 'slur', 'vulgar', 'derogatory']
 OFFENSIVE_WORDS_TAGS = ['slur', 'vulgar', 'derogatory']
 
-wrong_words = dict()
 
 def main():
+    wrong_words = dict()
+    words_dict = set()
     for line in open(JSON_PATH, 'r'):
         word = json.loads(line)
+        words_dict.add(word['word'])
         if 'senses' in word:
             for elem in word['senses']:
                 if 'tags' in elem:
@@ -25,6 +29,8 @@ def main():
 
     with open("polish_offensive_dict.json", "w") as write_file:
         json.dump(wrong_words, write_file)
+
+    pickle.dump(words_dict, open("polish_dict.p", "wb") )
 
 
 if __name__ == '__main__':
