@@ -121,6 +121,6 @@ class Augmenter:
 
 
 if __name__ == "__main__":
-    augmenter = Augmenter("../../polish_offensive_dict.json")
+    augmenter = Augmenter("polish_offensive_dict.json")
     res = augmenter.augment_text("kebab Tomasz Lis jest Żydem i murzynem", "polish", second_lang="polish")
     print(res)
