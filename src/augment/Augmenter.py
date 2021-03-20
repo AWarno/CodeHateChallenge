@@ -43,6 +43,9 @@ class Augmenter:
             bpe_codes="code",
             cpu=False
         )
+
+        self.translator_eng_pl.to(torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
+
         self.translator_pl_eng = BaseFairseqModel.from_pretrained(
             model_name_or_path="polish-english-conv",
             checkpoint_file="checkpoint_best.pt",
@@ -52,6 +55,9 @@ class Augmenter:
             bpe_codes="code",
             cpu=False
         )
+
+        self.translator_pl_eng.to(torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
+
         self.offensive_dict = OffensiveDict(path)
 
     # def _divide_by_offensive_words(self, sentence):
