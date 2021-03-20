@@ -1,12 +1,12 @@
 from fairseq.models import BaseFairseqModel
 
 from src.augment.eda_nlp.code.eda import eda
-from src.augment.offensive_dict import OFFENSIVE_DICT
+from src.augment.offensive_dict import OffensiveDict
 
 
 class Augmenter:
 
-    def __init__(self, num_aug=9, alpha_sr=0.1, alpha_ri=0.1, alpha_rs=0.1, alpha_rd=0.1):
+    def __init__(self, path: str, num_aug=9, alpha_sr=0.1, alpha_ri=0.1, alpha_rs=0.1, alpha_rd=0.1):
         # number of augmented sentences to generate per original sentence
         self.num_aug = num_aug
 
@@ -40,6 +40,7 @@ class Augmenter:
             bpe_codes="code",
             cpu=False
         )
+        self.offensive_dict = OffensiveDict(path)
 
     # def _divide_by_offensive_words(self, sentence):
     #     sentence_split = sentence.split(" ")
@@ -91,7 +92,7 @@ class Augmenter:
         sentence_split = sentence.split(" ")
         new_sent = []
         for word in sentence_split:
-            if word in OFFENSIVE_DICT:
+            if word in self.offensive_dict.offensive_dict:
                 new_sent.append("< "+word + " >")
             else:
                 new_sent.append(word)
@@ -120,6 +121,6 @@ class Augmenter:
 
 
 if __name__ == "__main__":
-    augmenter = Augmenter()
-    res = augmenter.augment_text("Tomasz Lis jest Żydem", "polish", second_lang="polish")
+    augmenter = Augmenter("../../polish_offensive_dict.json")
+    res = augmenter.augment_text("kebab Tomasz Lis jest Żydem i murzynem", "polish", second_lang="polish")
     print(res)
