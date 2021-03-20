@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "es2015",
+    "sourceMap": true,
+//    "outDir": "dist",
+    "skipLibCheck": true
+  },
+  "exclude": [
+    "node_modules"
+  ],
+  "files": [
+    "main.ts",
+    "src/preload.ts",
+    "pages/renderer.ts"
+  ]
+}
