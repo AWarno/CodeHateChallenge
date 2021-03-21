@@ -147,3 +147,9 @@ yarn.lock
 # models
 /english-polish-conv/
 /polish-english-conv/
+
+#backend
+*.pyc
+.idea/
+__pycache__/
+*.pkl
