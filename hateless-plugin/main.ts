@@ -11,7 +11,7 @@ const sound = require('sound-play');
 
 const max_log_size = 16384;
 const history_max_size = 100;
-const endpoint_address: string = "127.0.0.1";
+const endpoint_address: string = "127.0.0.1:8080";
 
 var observer = null;
 var mainWindow = null;

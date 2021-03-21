@@ -6,7 +6,7 @@ var axios = require('axios');
 var sound = require('sound-play');
 var max_log_size = 16384;
 var history_max_size = 100;
-var endpoint_address = "127.0.0.1";
+var endpoint_address = "127.0.0.1:8080";
 var observer = null;
 var mainWindow = null;
 var KeyMouseObserver = /** @class */ (function () {
@@ -102,7 +102,7 @@ function createWindow() {
     // and load the index.html of the app.
     mainWindow.loadFile('pages/index.html');
     // Open the DevTools.
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools()
 }
 app.whenReady().then(function () {
     observer = new KeyMouseObserver();
