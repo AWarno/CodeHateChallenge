@@ -4,6 +4,11 @@ import io
 import flask
 import random
 from detoxify import Detoxify
+import numpy as np
+import lime
+import torch
+import torch.nn.functional as F
+from lime.lime_text import LimeTextExplainer
 # import ssl
 
 
@@ -29,6 +34,7 @@ class ScoringService(object):
         """Get the model object for this instance, loading it if it's not already loaded."""
         if cls.model is None:
             cls.model = Detoxify('original')
+            cls.model.model.eval()
         return cls.model
 
     @classmethod
@@ -77,11 +83,47 @@ def is_hate():
     print('Invoked with: {}'.format(data))
 
     # Do the prediction
-    #prediction = ScoringService.predict(data)
-    prediction = bool(random.randint(0, 2))
+    prediction = ScoringService.predict(data)
     print(prediction)
-    return flask.Response(response=str(prediction), status=200, mimetype='application/json')
+    return flask.Response(response=str(prediction['toxicity'] > 0.6), status=200, mimetype='application/json')
 
 @app.route("/whyhate", methods=["POST"])
 def why_hate():
-    return flask.Response(response="Sample explanation\n", status=200, mimetype="application/json")
+    text = None
+
+    # Convert from CSV to pandas
+    if flask.request.content_type == 'text/plain':
+        text = flask.request.data.decode('utf-8')
+        text = io.StringIO(text)
+        text.seek(0)
+        text = text.read()
+    else:
+        return flask.Response(response='This predictor only supports text data', status=415, mimetype='application/json')
+
+    print('Invoked with: {}'.format(text))
+
+
+    class_names = ['not hate','hate']
+    model = Detoxify("original")
+    model.model.cpu()
+
+    def predictor(texts):
+        logits = model.model(**model.tokenizer(texts, return_tensors="pt", truncation=True, padding=True ))[0][:, 0]
+        score = torch.sigmoid(logits).detach().numpy()
+        if isinstance(texts, list) and len(texts) > 1:
+            score = score.reshape(-1, 1)
+            scores = np.concatenate([1 - score, score], 1)
+            return scores
+        else:
+            scores = np.expand_dims(np.array([1 - score, score]), 0).reshape(-1, 2)
+            return scores
+
+    explainer = LimeTextExplainer(class_names=class_names)
+
+    exp = explainer.explain_instance(text, predictor, num_features=20, num_samples=10)
+    output = dict(exp.as_list())
+    print(output)
+    output = flask.jsonify(output)
+    del model
+
+    return output

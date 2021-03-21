@@ -27,9 +27,11 @@ ENV PATH="/opt/program:${PATH}"
 ENV MODEL_PATH="/opt/ml/model"
 
 # Set up the program in the image
-COPY model /opt/program
+COPY model/download_model.py /opt/program
 
-# RUN python3 /opt/program/download_model.py
+RUN python3 /opt/program/download_model.py
+
+COPY model /opt/program
 
 WORKDIR /opt/program
 

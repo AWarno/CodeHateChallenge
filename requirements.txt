@@ -5,6 +5,7 @@ gunicorn
 
 # dependencies for the custom model
 detoxify
+lime
 
 # eda
 antlr4-python3-runtime==4.8
