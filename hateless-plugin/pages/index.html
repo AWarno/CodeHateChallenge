@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <title>Hateless plugin!</title>
+    <link rel="stylesheet" href="custom.css">
+  </head>
+  <body>
+
+    <img src="img/smile_small.png" alt="Logo" class="center-image">
+    <h2 class="center-text">Hateless plugin</h2>
+
+    <label class="center-image" for="btn_enabled">
+      <input type="checkbox" id="btn_enabled" />
+      <span class="label-text pad">Enable recognition</span>
+    </label>
+
+    <label class="center-image" for="btn_sound">
+      <input type="checkbox" id="btn_sound" />
+      <span class="label-text pad">Enable sound alarms</span>
+    </label>
+    <input type="button" id="btn_history" class="center-image inv-text"  value="Show history" name="Show History"/>
+    <script src="renderer.js"></script>
+  </body>
+</html>

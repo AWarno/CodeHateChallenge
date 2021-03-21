@@ -1,0 +1,27 @@
+{
+  "name": "hateless-plugin",
+  "version": "1.0.0",
+  "description": "Hate speech detector",
+  "main": "main.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "lint": "eslint -c .eslintrc --ext .ts ./src",
+    "start": "npm run build && electron main.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^3.4.0",
+    "@typescript-eslint/parser": "^3.4.0",
+    "axios": "^0.21.1",
+    "electron": "^12.0.1",
+    "eslint": "^7.3.1",
+    "gkm": "^0.2.0",
+    "typescript": "^3.9.5"
+  },
+  "dependencies": {
+    "@types/electron-notifications": "^0.0.3",
+    "sound-play": "^1.1.0"
+  }
+}
