@@ -14,40 +14,38 @@ const history_max_size = 100;
 const endpoint_address: string = "127.0.0.1";
 
 var observer = null;
+var mainWindow = null;
 
 class KeyMouseObserver {
-    key_observer: Function;
-    mouse_observer: Function;
     cache: string;
     history: string[];
+    is_enabled: boolean;
 
     sound_enabled: boolean;
 
     constructor() {
-        this.key_observer = null;
-        this.mouse_observer = null;
         this.cache = '';
         this.history = [];
         this.sound_enabled = false;
+        this.is_enabled = false;
     }
 
     enable_observer () {
-        var cache = this.cache;
-        var me = this;
-        this.key_observer = gkm.events.on('key.*', function (key: string[]) {
+        var self = this;
+        gkm.events.on('key.*', function (key: string[]) {
             if (this.event === 'key.pressed') {
                 switch (key[0]) {
                     case 'Backspace':
-                        cache = cache.substring(0, cache.length - 1) ;
+                        self.cache = self.cache.substring(0, self.cache.length - 1) ;
                         break;
                     case 'Enter':
-                        me.queryIsHate()
+                        self.queryIsHate()
                         break;
                     default:
                         if (key[0].length == 1) {
-                            cache += key[0];
-                            if (cache.length > max_log_size) {
-                                cache = cache.substring(1)
+                            self.cache += key[0];
+                            if (self.cache.length > max_log_size) {
+                                self.cache = self.cache.substring(1)
                             }
                         }
                         break;
@@ -55,14 +53,15 @@ class KeyMouseObserver {
             }
         });
 
-        this.mouse_observer = gkm.events.on('mouse.pressed',  (operation: string) => {me.queryIsHate()})
-
+        gkm.events.on('mouse.pressed',  (operation: string) => {self.queryIsHate()})
+        this.is_enabled = true;
     }
 
     disable_observer() {
         this.cache = '';
         gkm.events.removeAllListeners('mouse.pressed');
         gkm.events.removeAllListeners('key.*');
+        this.is_enabled = false;
     }
 
     enable_sound() {
@@ -75,34 +74,34 @@ class KeyMouseObserver {
 
     queryIsHate () {
         const content: string = this.cache;
-        this.history.push(content);
+        this.history.push(content.slice());
         if (this.history.length > history_max_size)
             this.history.pop()
+        this.cache = '';
+        const axios_config = {
+            headers: {
+                'Content-Length': 0,
+                'Content-Type': 'text/plain'
+            },
+            responseType: 'text'
+        }
 
-        axios.post(`http://${endpoint_address}:3000/ishate`, { params: {
-                content: content,
-            }}).then(
+        axios.post(`http://${endpoint_address}/ishate`, content, axios_config).then(
             (response) => {
-                if (electron.Notifications.isSupported()) {
+                if (response.data == 'True') {
                     if (this.sound_enabled) {
                         const soundPath = path.join(__dirname, "sounds", 'horns.m4a');
                         sound.play(soundPath)
-                        if (electron.Notification.isSupported()) {
-                            const notification = {
-                                title: 'Hate speech detected!',
-                                body: 'Hate speech detected in sentence ' + "haha"
-                            }
-                            new electron.Notification(notification).show();
-
+                    }
+                    if (electron.Notification.isSupported()) {
+                        const notification = {
+                            title: 'Hate speech detected!',
+                            body: 'Hate speech detected in sentence ' + content
                         }
+                        new electron.Notification(notification).show();
                     }
-                    const notification = {
-                        title: 'Hate speech detected!',
-                        body: 'Hate speech detected in sentence ' + content
-                    }
-                    new electron.Notification(notification).show();
-
                 }
+
             })
             .catch(function (error) {
                 console.log(error)
@@ -113,9 +112,11 @@ class KeyMouseObserver {
 
 function createWindow () {
     // Create the browser window.
-    const mainWindow = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 300,
         height: 480,
+        resizable: false,
+        maximizable: false,
         webPreferences: {
             // nodeIntegration: true
             preload: path.join(app.getAppPath(), 'src', 'preload.js')
@@ -127,7 +128,7 @@ function createWindow () {
     mainWindow.loadFile('pages/index.html')
 
     // Open the DevTools.
-    // mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools()
 }
 
 app.whenReady().then(() => {
@@ -146,6 +147,13 @@ app.whenReady().then(() => {
             observer.enable_sound()
         else
             observer.disable_sound()
+    })
+
+    ipcMain.handle('historyToMain', (event, ...args) => {
+        mainWindow.webContents.send("historyFromMain", observer.history)
+    })
+    ipcMain.handle('getStateToMain', (event, ...args) => {
+        mainWindow.webContents.send("getStateFromMain", [observer.is_enabled, observer.sound_enabled])
     })
 
     createWindow()
