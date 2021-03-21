@@ -19,7 +19,7 @@ var KeyMouseObserver = /** @class */ (function () {
     KeyMouseObserver.prototype.enable_observer = function () {
         var self = this;
         gkm.events.on('key.*', function (key) {
-            if (this.sevent === 'key.pressed') {
+            if (this.event === 'key.pressed') {
                 switch (key[0]) {
                     case 'Backspace':
                         self.cache = self.cache.substring(0, self.cache.length - 1);

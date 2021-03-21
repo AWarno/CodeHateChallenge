@@ -31,7 +31,7 @@ class KeyMouseObserver {
     }
 
     enable_observer () {
-        var self = this;
+        const self = this;
         gkm.events.on('key.*', function (key: string[]) {
             if (this.event === 'key.pressed') {
                 switch (key[0]) {
@@ -128,7 +128,7 @@ function createWindow () {
     mainWindow.loadFile('pages/index.html')
 
     // Open the DevTools.
-    mainWindow.webContents.openDevTools()
+    // mainWindow.webContents.openDevTools()
 }
 
 app.whenReady().then(() => {
