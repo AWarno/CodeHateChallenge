@@ -1,7 +1,34 @@
 # CodeHateChallenge
 
 ## Data augmentation
+
+### Fast pipeline to augment data in any language
+Pipeline can ba adopted easily to any language. 
+Example pipeline for Polish language:
+![Polish pipeline](data/pipeline.jpg)
+### Scraping data (positive and negative examples)
+
+The examples utterances (positive and negative) are scrap examples data from the page 
+**https://pl.wiktionary.org/wiki/** based on list of offensive words. 
+This process enables to increase the number of false-positive examples in the dataset.
+
+Selenium is used to scrap the data. 
+
+How to use:
+```
+python src/augment/scrap_wiki.py 
+d = OffensiveDict("wiki_words2.json")
+d.create_csv_with_utterances()
+```
+
+Example scraped sentences for word **pies**:
+-  Czy to jest **pies** czy suka? " zool. Canis familiaris[1], zwierzę domowe; zob. też pies w Wikipedii" - not offencive example
+-  **Psy** stoją na patrolu.,pies," slang. obraź. policjant[3], żandarm lub milicjant" - offencive example 
+
+
+
 ### EDA
+EDA is a package used to augment data in English.  
 GIT source: https://github.com/jasonwei20/eda_nlp.git 
 
 Required to do before usage:
@@ -25,7 +52,7 @@ Example output:
 
 ```
 
-### Back translation
+### Custom back translation
 Require to install:
 ```
 pip install transformers
@@ -34,3 +61,14 @@ pip install sentencepiece
 pip install fairseq
 pip install subword-nmt
 ```
+How to use:
+```
+augmenter = Augmenter("polish_offensive_dict.json")
+augmenter.back_translation("Kurwa, uchodźcy niszczą Polskę, jebane kozojebcy", first_lang="polish", second_lang="english")
+```
+Example result:
+```
+>>> Kurwa, uchodźcy niszczą Polskę, wy pierdolone kozie skurwiele.
+```
+
+

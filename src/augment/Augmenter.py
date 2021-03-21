@@ -199,6 +199,9 @@ if __name__ == "__main__":
     new_df = pd.DataFrame({'text': [], 'new_text': []})
     final_results = []
     augmenter = Augmenter("polish_offensive_dict.json")
+
+    print(augmenter.back_translation("Kurwa, uchodźcy niszczą Polskę, jebane kozojebcy"))
+
     res = augmenter.augment_text("Jestś nic nie wartą ścierą, do garów dziwko", "polish", second_lang="polish")
     # print(augmenter.is_polish_sentence("murzyni do gazu"))
     print(res)

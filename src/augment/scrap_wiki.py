@@ -36,5 +36,5 @@ for word in offensive_dict:
       print(get_element[i].text)
       res[word]["przyk"].append(get_element[i].text)
 
-with open('words.json', 'w') as f:
+with open('wiki_words2.json', 'w') as f:
     json.dump(res, f)
