@@ -3,12 +3,13 @@ import pickle
 import spacy
 import pl_core_news_sm
 import torch
+import pandas as pd
 
 from src.augment.eda_nlp.code.eda import eda
 from src.augment.offensive_dict import OffensiveDict
 
 WORDS_PATH = 'polish_dict.p'
-OFFENSIVE_WORDS_TAGS = ['slur', 'derogatory', 'vulgar']
+OFFENSIVE_WORDS_TAGS = ['slur', 'offensive', 'derogatory',  'vulgar']
 
 
 class Augmenter:
@@ -60,7 +61,7 @@ class Augmenter:
         )
 
         # self.translator_pl_eng.to(torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
-        self.translator_pl_eng.to(torch.device('cpu') if torch.cuda.is_available() else torch.device('cpu'))
+        self.translator_pl_eng.to(torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu'))
 
         self.offensive_dict = OffensiveDict(path)
 
@@ -154,41 +155,33 @@ class Augmenter:
             new_sent, off_words = self._divide_by_offensive_words(sentence)
             sentence = self.translator_pl_eng.translate(sentences=new_sent, beam=5)
             sentence = ''.join(sentence)
-            print(new_sent)
 
-            print(sentence)
         off_words.append(['', ['']])
         print(off_words, "OFF WORDS!!")
         aug_sentences = eda(sentence, alpha_sr=self.alpha_sr, alpha_ri=self.alpha_ri, alpha_rs=self.alpha_rs,
                               p_rd=self.alpha_rd, num_aug=self.num_aug)
 
         if second_lang == "polish":
-            print(aug_sentences)
             translated = [self.translator_eng_pl.translate(sentences=part, beam=5) for part in aug_sentences] 
             # [ "czarny murzyn> kradnie", "murzyn> kradie"]
-            print(translated[0])
             results = []
             for i, utterance in enumerate(translated):
-                print(i, utterance)
                 offensive_words = []
                 # 0, "czarny murzyn> kardnie" [["murzyn", tag] ]
                 new_sent = ''
                 words_tags = []
                 for tag in off_words:
-                    print(tag, 'TAG')
                     new_tag = ''
                     for t in tag[1]:
                         if t in OFFENSIVE_WORDS_TAGS:
                             new_tag = t + '  ' + tag[0]
                             words_tags.append(new_tag)
-                            print(new_tag, 'TAG 0')
                             break
 
 
                     # offensive_words.append(off_words)
                     # print(off_word.split(">")[0], 'OFF word')
                 new_sent +=  utterance +  ' (' +  ' '.join(words_tags) + ')'
-                print(new_sent)
                 offensive_words.append( ' (' + new_tag + ')')
                 results.append(new_sent)
                 
@@ -203,9 +196,29 @@ class Augmenter:
 
 
 if __name__ == "__main__":
+    new_df = pd.DataFrame({'text': [], 'new_text': []})
     final_results = []
     augmenter = Augmenter("polish_offensive_dict.json")
-    res = augmenter.augment_text("ale z ciebie debil, murzyn i żydek i do tego jesteś brzydki jak noc", "polish", second_lang="polish")
+    res = augmenter.augment_text("Jestś nic nie wartą ścierą, do garów dziwko", "polish", second_lang="polish")
     # print(augmenter.is_polish_sentence("murzyni do gazu"))
     print(res)
     print([r for r in res if augmenter.is_polish_sentence(r)])
+    data = pd.read_csv('augmented_polish_data.csv')
+
+    data = data[data['split'] == 0] 
+    for i, text in enumerate(data['text'].values):
+        print(i, text)
+        try:
+            res = augmenter.augment_text(text, "polish", second_lang="polish")
+            res = [r for r in res if augmenter.is_polish_sentence(r)]
+            new_text = ''
+            for r in res:
+                if len(r.split(' ')) > len(new_text.split(' ')):
+                    new_text = r
+            tmp_df = pd.DataFrame({'text': [text], 'new_text': [new_text]})
+            new_df = new_df.append(tmp_df, ignore_index=True)
+            new_df.to_csv('unsup.csv')         
+        except IndexError:
+            continue
+        print(res)
+
