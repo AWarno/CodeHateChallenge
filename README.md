@@ -77,5 +77,22 @@ Bert UDA architecture:
 ![Polish pipeline](data/bert_uda.png)
 
 ### Other models
-- [detoxify ](https://github.com/unitaryai/detoxify)
-- [transformers from huggingface](https://github.com/huggingface/transformers)
+- [detoxify ](https://github.com/unitaryai/detoxify) (will be used in demo)
+- [transformers from huggingface](https://github.com/huggingface/transformers) (trying to find good approach for less popular languages, different experiments conducted)
+
+![logi](logi.png)
+1. 1 model per language
+2. multilingual bert
+3. model trained on polish and added translated labeled english examples
+4. english pretrained model trained on translated polish tweets and added english examples
+5. multilingual model trained on sentences containing original polish tweet + translated
+6. small demo of BERT UDA trained on polish tweets (pretrained on polish), with backtranslation (marking translating changes on 'strong' words) and with EDA
+
+(unordered)
+
+
+![conf](conf.png)
+
+Results on small dataset (training ~ 600 examples) composed of 800 examples extracted by our method descibed above 
+
+
