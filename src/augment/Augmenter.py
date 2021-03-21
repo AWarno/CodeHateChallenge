@@ -2,11 +2,13 @@ from fairseq.models import BaseFairseqModel
 import pickle
 import spacy
 import pl_core_news_sm
+import torch
 
 from src.augment.eda_nlp.code.eda import eda
 from src.augment.offensive_dict import OffensiveDict
 
 WORDS_PATH = 'polish_dict.p'
+OFFENSIVE_WORDS_TAGS = ['slur', 'derogatory', 'vulgar']
 
 
 class Augmenter:
@@ -22,10 +24,10 @@ class Augmenter:
         self.alpha_ri = alpha_ri
 
         # how much to swap words
-        self.alpha_rs = 0.
+        self.alpha_rs = 0.00000001
 
         # how much to delete words
-        self.alpha_rd = alpha_rd
+        self.alpha_rd = 0.0000001
 
         # polish words pickle
         with open(WORDS_PATH, 'rb') as handle:
@@ -45,6 +47,7 @@ class Augmenter:
         )
 
         # self.translator_eng_pl.to(torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
+        self.translator_eng_pl.to(torch.device('cpu') if torch.cuda.is_available() else torch.device('cpu'))
 
         self.translator_pl_eng = BaseFairseqModel.from_pretrained(
             model_name_or_path="polish-english-conv",
@@ -57,6 +60,7 @@ class Augmenter:
         )
 
         # self.translator_pl_eng.to(torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
+        self.translator_pl_eng.to(torch.device('cpu') if torch.cuda.is_available() else torch.device('cpu'))
 
         self.offensive_dict = OffensiveDict(path)
 
@@ -109,15 +113,25 @@ class Augmenter:
     def _divide_by_offensive_words(self, sentence):
         sentence_split = sentence.split(" ")
         new_sent = []
+        off_words = []
         for word in sentence_split:
+            word = word.lower()
+            word = self.nlp(word)[0].lemma_
+            print(word)
             if word in self.offensive_dict.offensive_dict:
-                new_sent.append("< "+word + " >")
+                off_words.append([word, self.offensive_dict.offensive_dict[word]['tags']])
+                new_sent.append("<" + word + ">" )
             else:
                 new_sent.append(word)
+        
 
-        return " ".join(new_sent)
+        # new_sentences = " ".join(new_sent)
+        # new_sentences = new_sentences.split("<")
+        return " ".join(new_sent), off_words
+        # return new_sentences, off_words
 
     def is_word(self, word):
+        word = word.lower()
         if word in self.polish_words:
             return True
         else:
@@ -127,7 +141,7 @@ class Augmenter:
         seq_len = len(seq.split(' '))
         lemmas = self.nlp(seq)
         correct_words = [y for y in lemmas if self.is_word(y.lemma_)]
-        if len(correct_words / seq_len) < tresh:
+        if (len(correct_words) / seq_len) < tresh:
             return False
         return True
         
@@ -135,18 +149,51 @@ class Augmenter:
         
 
     def augment_text(self, sentence, first_lang, second_lang='english'):
+        off_words = []
         if first_lang == "polish":
-            new_sent = self._divide_by_offensive_words(sentence)
+            new_sent, off_words = self._divide_by_offensive_words(sentence)
             sentence = self.translator_pl_eng.translate(sentences=new_sent, beam=5)
+            sentence = ''.join(sentence)
             print(new_sent)
 
             print(sentence)
+        off_words.append(['', ['']])
+        print(off_words, "OFF WORDS!!")
         aug_sentences = eda(sentence, alpha_sr=self.alpha_sr, alpha_ri=self.alpha_ri, alpha_rs=self.alpha_rs,
                               p_rd=self.alpha_rd, num_aug=self.num_aug)
 
         if second_lang == "polish":
             print(aug_sentences)
-            return [self.translator_eng_pl.translate(sentences=part, beam=5) for part in aug_sentences]
+            translated = [self.translator_eng_pl.translate(sentences=part, beam=5) for part in aug_sentences] 
+            # [ "czarny murzyn> kradnie", "murzyn> kradie"]
+            print(translated[0])
+            results = []
+            for i, utterance in enumerate(translated):
+                print(i, utterance)
+                offensive_words = []
+                # 0, "czarny murzyn> kardnie" [["murzyn", tag] ]
+                new_sent = ''
+                words_tags = []
+                for tag in off_words:
+                    print(tag, 'TAG')
+                    new_tag = ''
+                    for t in tag[1]:
+                        if t in OFFENSIVE_WORDS_TAGS:
+                            new_tag = t + '  ' + tag[0]
+                            words_tags.append(new_tag)
+                            print(new_tag, 'TAG 0')
+                            break
+
+
+                    # offensive_words.append(off_words)
+                    # print(off_word.split(">")[0], 'OFF word')
+                new_sent +=  utterance +  ' (' +  ' '.join(words_tags) + ')'
+                print(new_sent)
+                offensive_words.append( ' (' + new_tag + ')')
+                results.append(new_sent)
+                
+                    
+            return results
         return aug_sentences
 
     def back_translation(self, sentence, first_lang="polish", second_lang="english"):
@@ -156,7 +203,9 @@ class Augmenter:
 
 
 if __name__ == "__main__":
+    final_results = []
     augmenter = Augmenter("polish_offensive_dict.json")
-    res = augmenter.augment_text("murzyni do gazu", "polish", second_lang="polish")
-    # print(augmenter.is_polish_sentence("cza cza cza cza"))
+    res = augmenter.augment_text("ale z ciebie debil, murzyn i żydek i do tego jesteś brzydki jak noc", "polish", second_lang="polish")
+    # print(augmenter.is_polish_sentence("murzyni do gazu"))
     print(res)
+    print([r for r in res if augmenter.is_polish_sentence(r)])

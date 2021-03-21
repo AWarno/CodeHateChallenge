@@ -26,7 +26,7 @@ stop_words = ['i', 'me', 'my', 'myself', 'we', 'our',
 			'few', 'more', 'most', 'other', 'some', 'such', 'no', 
 			'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 
 			'very', 's', 't', 'can', 'will', 'just', 'don', 
-			'should', 'now', '']
+			'should', 'now', '', '<', '>']
 
 #cleaning up text
 import re
@@ -42,7 +42,7 @@ def get_only_chars(line):
     line = line.lower()
 
     for char in line:
-        if char in 'qwertyuiopasdfghjklzxcvbnm ':
+        if char in 'qwertyuiopasdfghjklzxcvbnm<> ':
             clean_line += char
         else:
             clean_line += ' '
