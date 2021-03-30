@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fire = "*"
+torch = "*"
+transformers = "*"
+tensorflow = "*"
+tensorboardx = "*"
+pandas = "*"
+numpy = "*"
+install = "*"
+nltk = "*"
+tensor2tensor = "==1.13.4"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"
